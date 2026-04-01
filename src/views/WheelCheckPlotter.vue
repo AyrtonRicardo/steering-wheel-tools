@@ -261,7 +261,7 @@ function rebuildChart() {
   }
 
   visible.forEach((file, idx) => {
-    const { normF, normD, normDRaw, forces, sDeltas } = getProcessed(file)
+    const { normF, normD, normDRaw } = getProcessed(file)
     const col = file.color
 
     if (tab === 'smooth') {
