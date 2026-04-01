@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Encoder Resolution Calculator — DIY Steering Wheel Tools</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">&#9696;</span>
+          <span class="logo-text">DIY Steering Wheel Tools</span>
+        </div>
+        <nav class="site-nav">
+          <a href="../index.html" class="nav-link">Home</a>
+          <a href="encoder-calculator.html" class="nav-link active">Encoder Calc</a>
+          <a href="torque-calculator.html" class="nav-link">Torque Calc</a>
+          <a href="button-matrix.html" class="nav-link">Button Matrix</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="container">
+
+      <div class="tool-page-header">
+        <a href="../index.html" class="back-link">&#8592; All Tools</a>
+        <h1 class="tool-page-title">&#128260; Encoder Resolution Calculator</h1>
+        <p class="tool-page-desc">
+          Determine how many encoder counts fall within each degree of rotation — and verify
+          your setup meets OpenFFBoard's recommended minimums for smooth force feedback.
+        </p>
+      </div>
+
+      <div class="tool-layout">
+
+        <!-- Inputs -->
+        <div class="panel">
+          <p class="panel-title">Configuration</p>
+
+          <div class="field">
+            <label for="ppr">Encoder PPR (Pulses Per Revolution)</label>
+            <input type="number" id="ppr" value="2000" min="1" step="1" />
+            <p class="hint">
+              Check your encoder datasheet. Most quadrature encoders multiply this ×4
+              — enter the base PPR, not the quadrature count.
+            </p>
+          </div>
+
+          <div class="field">
+            <label for="quadrature">Quadrature Multiplier</label>
+            <select id="quadrature">
+              <option value="4" selected>×4 — Quadrature (most encoders)</option>
+              <option value="2">×2 — Half quadrature</option>
+              <option value="1">×1 — No multiplier (single-ended)</option>
+            </select>
+            <p class="hint">OpenFFBoard uses full ×4 quadrature decoding by default.</p>
+          </div>
+
+          <div class="field">
+            <label for="gearRatio">Gear / Belt Ratio</label>
+            <input type="number" id="gearRatio" value="1" min="0.01" step="0.01" />
+            <p class="hint">
+              Set to <code>1</code> for direct-drive. For a 3:1 reduction pulley
+              enter <code>3</code>; the encoder sees 3 turns per wheel turn.
+            </p>
+          </div>
+
+          <div class="field">
+            <label for="steeringRange">Steering Lock-to-Lock (degrees)</label>
+            <input type="number" id="steeringRange" value="900" min="1" step="1" />
+            <p class="hint">Typical sim range: 540° – 1080°. Used to show total count range.</p>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="panel">
+          <p class="panel-title">Results</p>
+
+          <div class="result-grid">
+            <div class="result-card highlight">
+              <p class="result-label">Counts per Degree</p>
+              <p class="result-value"><span id="res-cpd">—</span><span class="result-unit">cnt/°</span></p>
+            </div>
+            <div class="result-card">
+              <p class="result-label">Degrees per Count</p>
+              <p class="result-value"><span id="res-dpc">—</span><span class="result-unit">°/cnt</span></p>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <p class="result-label">Total CPR (after ×ratio)</p>
+              <p class="result-value"><span id="res-total-cpr">—</span></p>
+            </div>
+            <div class="result-card">
+              <p class="result-label">Counts over Lock-to-Lock</p>
+              <p class="result-value"><span id="res-range-cnt">—</span></p>
+            </div>
+          </div>
+
+          <div id="status-badge" class="status-badge status-ok">Excellent resolution</div>
+
+          <div class="divider"></div>
+
+          <p class="panel-title">Resolution Benchmark</p>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Rating</th>
+                <th>Counts / °</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="color:var(--danger)">&#9679; Marginal</td>
+                <td>&lt; 5</td>
+                <td>FFB may feel stepped / coarse</td>
+              </tr>
+              <tr>
+                <td style="color:var(--warning)">&#9679; Acceptable</td>
+                <td>5 – 20</td>
+                <td>Smooth enough for most games</td>
+              </tr>
+              <tr>
+                <td style="color:var(--success)">&#9679; Good</td>
+                <td>20 – 100</td>
+                <td>OpenFFBoard recommended range</td>
+              </tr>
+              <tr>
+                <td style="color:var(--accent)">&#9679; Excellent</td>
+                <td>&gt; 100</td>
+                <td>High-res servo encoders / geared setups</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="info-box">
+            <strong>OpenFFBoard tip:</strong> The firmware default is up to
+            <strong>32 000</strong> counts/rev. If your CPR exceeds that, configure the
+            encoder divider in the OpenFFBoard web UI to stay within range.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Common encoder reference table -->
+      <div class="panel" style="margin-top:24px;">
+        <p class="panel-title">Common Encoder Reference</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Encoder</th>
+              <th>Base PPR</th>
+              <th>×4 CPR</th>
+              <th>Cnt/° (direct-drive, 900°)</th>
+              <th>Typical Use</th>
+            </tr>
+          </thead>
+          <tbody id="ref-table-body">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Open-source &bull;
+        <a href="https://github.com/ayrtonricardo/steering-wheel-tools" target="_blank" rel="noopener">View on GitHub</a>
+        &bull; Not affiliated with the OpenFFBoard project
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // ---- Reference encoder list ----
+    const ENCODERS = [
+      { name: 'CUI AMT102-V (cheap, popular)',   ppr:  2048, use: 'Hobby / entry-level DD' },
+      { name: 'Bourns EMS22A (absolute)',         ppr:  1024, use: 'Compact / single-turn abs' },
+      { name: 'US Digital E6 (optical)',          ppr:  2500, use: 'Mid-range incremental' },
+      { name: 'Renishaw RM44 (magnetic)',         ppr:  5000, use: 'Mid-high resolution' },
+      { name: 'Heidenhain ERN 1020 (optical)',    ppr: 10000, use: 'High-end DD base' },
+      { name: 'Generic 600-ppr disc',             ppr:   600, use: 'Low-cost prototype' },
+      { name: 'OMRON E6B2-CWZ1X 10000P',         ppr: 10000, use: 'Industrial, high-res' },
+    ];
+
+    function buildRefTable(steeringRange) {
+      const tbody = document.getElementById('ref-table-body');
+      tbody.innerHTML = '';
+      ENCODERS.forEach(enc => {
+        const cpr = enc.ppr * 4;
+        const cpd = (cpr / 360).toFixed(1);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${enc.name}</td>
+          <td>${enc.ppr.toLocaleString()}</td>
+          <td>${cpr.toLocaleString()}</td>
+          <td class="highlight-cell">${cpd}</td>
+          <td>${enc.use}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getStatusBadge(cpd) {
+      if (cpd < 5)   return { cls: 'status-bad',  text: 'Marginal — may feel stepped' };
+      if (cpd < 20)  return { cls: 'status-warn', text: 'Acceptable resolution' };
+      if (cpd < 100) return { cls: 'status-ok',   text: 'Good resolution' };
+      return              { cls: 'status-ok',   text: 'Excellent resolution' };
+    }
+
+    function calculate() {
+      const ppr          = parseFloat(document.getElementById('ppr').value)          || 0;
+      const quadrature   = parseFloat(document.getElementById('quadrature').value)   || 4;
+      const gearRatio    = parseFloat(document.getElementById('gearRatio').value)    || 1;
+      const steeringRange = parseFloat(document.getElementById('steeringRange').value) || 900;
+
+      const totalCpr  = ppr * quadrature * gearRatio;
+      const cpd       = totalCpr / 360;
+      const dpc       = cpd > 0 ? 360 / totalCpr : 0;
+      const rangeCnt  = cpd * steeringRange;
+
+      document.getElementById('res-total-cpr').textContent =
+        totalCpr > 0 ? Math.round(totalCpr).toLocaleString() : '—';
+      document.getElementById('res-cpd').textContent =
+        cpd > 0 ? cpd.toFixed(2) : '—';
+      document.getElementById('res-dpc').textContent =
+        dpc > 0 ? dpc.toFixed(4) : '—';
+      document.getElementById('res-range-cnt').textContent =
+        rangeCnt > 0 ? Math.round(rangeCnt).toLocaleString() : '—';
+
+      const badge = document.getElementById('status-badge');
+      const { cls, text } = getStatusBadge(cpd);
+      badge.className = `status-badge ${cls}`;
+      badge.textContent = text;
+    }
+
+    // Wire up inputs
+    ['ppr', 'quadrature', 'gearRatio', 'steeringRange'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculate);
+    });
+
+    buildRefTable(900);
+    calculate();
+  </script>
+</body>
+</html>

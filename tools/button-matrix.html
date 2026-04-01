@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Button Matrix Calculator — DIY Steering Wheel Tools</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .matrix-vis {
+      display: inline-grid;
+      gap: 5px;
+    }
+    .matrix-row {
+      display: flex;
+      gap: 5px;
+    }
+    .matrix-cell {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .matrix-cell.used {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .matrix-cell.header-row {
+      background: transparent;
+      border-color: transparent;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .pin-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .pin-chip {
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pin-row-chip  { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .pin-col-chip  { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">&#9696;</span>
+          <span class="logo-text">DIY Steering Wheel Tools</span>
+        </div>
+        <nav class="site-nav">
+          <a href="../index.html" class="nav-link">Home</a>
+          <a href="encoder-calculator.html" class="nav-link">Encoder Calc</a>
+          <a href="torque-calculator.html" class="nav-link">Torque Calc</a>
+          <a href="button-matrix.html" class="nav-link active">Button Matrix</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="tool-page">
+    <div class="container">
+
+      <div class="tool-page-header">
+        <a href="../index.html" class="back-link">&#8592; All Tools</a>
+        <h1 class="tool-page-title">&#9633; Button Matrix Calculator</h1>
+        <p class="tool-page-desc">
+          Design a row × column button matrix for your wheel or button box.
+          Find the optimal matrix dimensions, pin requirements, and diode count
+          for any number of buttons.
+        </p>
+      </div>
+
+      <div class="tool-layout">
+
+        <!-- Inputs -->
+        <div class="panel">
+          <p class="panel-title">Configuration</p>
+
+          <div class="field">
+            <label for="numButtons">Number of Buttons</label>
+            <input type="number" id="numButtons" value="20" min="1" max="128" step="1" />
+            <p class="hint">How many physical buttons / switches you need to scan.</p>
+          </div>
+
+          <div class="field">
+            <label for="matrixMode">Matrix Sizing Mode</label>
+            <select id="matrixMode">
+              <option value="auto">Auto — minimise total pins</option>
+              <option value="square">Square-ish — rows ≈ columns</option>
+              <option value="manual">Manual — set rows &amp; columns</option>
+            </select>
+          </div>
+
+          <div id="manual-fields" style="display:none;">
+            <div class="field-row">
+              <div class="field">
+                <label for="manualRows">Rows</label>
+                <input type="number" id="manualRows" value="4" min="1" max="32" step="1" />
+              </div>
+              <div class="field">
+                <label for="manualCols">Columns</label>
+                <input type="number" id="manualCols" value="5" min="1" max="32" step="1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="diodeType">Anti-Ghosting Diodes</label>
+            <select id="diodeType">
+              <option value="yes" selected>Yes — recommended (1N4148 or similar)</option>
+              <option value="no">No — simple matrix (ghosting possible)</option>
+            </select>
+            <p class="hint">
+              Diodes prevent "ghost" keypresses when multiple buttons are pressed simultaneously.
+              Essential for a steering wheel.
+            </p>
+          </div>
+
+          <div class="field">
+            <label for="mcuPins">Available MCU GPIO Pins</label>
+            <input type="number" id="mcuPins" value="20" min="1" step="1" />
+            <p class="hint">
+              E.g. Arduino Pro Micro has 18 usable GPIO, STM32F4 has 50+.
+              Used to warn if your matrix exceeds available pins.
+            </p>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="panel">
+          <p class="panel-title">Results</p>
+
+          <div class="result-grid">
+            <div class="result-card highlight">
+              <p class="result-label">Matrix Size</p>
+              <p class="result-value"><span id="res-rows">—</span><span class="result-unit">R</span> × <span id="res-cols">—</span><span class="result-unit">C</span></p>
+            </div>
+            <div class="result-card">
+              <p class="result-label">Total Cells</p>
+              <p class="result-value"><span id="res-cells">—</span></p>
+              <p class="result-note" id="res-unused">— unused slots</p>
+            </div>
+          </div>
+
+          <div class="result-grid">
+            <div class="result-card">
+              <p class="result-label">GPIO Pins Required</p>
+              <p class="result-value"><span id="res-pins">—</span></p>
+            </div>
+            <div class="result-card">
+              <p class="result-label">Diodes Required</p>
+              <p class="result-value"><span id="res-diodes">—</span></p>
+            </div>
+          </div>
+
+          <div id="pin-status" class="status-badge status-ok">—</div>
+
+          <div class="divider"></div>
+
+          <p class="panel-title" style="margin-bottom:8px;">Pin Assignment</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Row pins (drive low, scan):</p>
+          <div class="pin-list" id="row-pins"></div>
+          <p style="font-size:12px;color:var(--text-muted);margin:10px 0 8px;">Column pins (read):</p>
+          <div class="pin-list" id="col-pins"></div>
+        </div>
+
+      </div>
+
+      <!-- Visual matrix -->
+      <div class="panel" style="margin-top:24px;">
+        <p class="panel-title">Matrix Layout Visualisation</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">
+          Orange cells = active button slots. Grey cells = unused matrix positions.
+        </p>
+        <div id="matrix-visual" style="overflow-x:auto;"></div>
+      </div>
+
+      <!-- Wiring notes -->
+      <div class="panel" style="margin-top:24px;">
+        <p class="panel-title">Wiring Notes</p>
+        <ul style="font-size:13.5px;color:var(--text-muted);line-height:2;padding-left:18px;">
+          <li>Connect each button between a <strong style="color:#60a5fa;">row line</strong> and a <strong style="color:#4ade80;">column line</strong>.</li>
+          <li>Place a diode <strong>in series</strong> with each button, anode toward the column, cathode toward the button (or vice-versa — be consistent).</li>
+          <li>Pull column lines <strong>HIGH</strong> via MCU internal pull-ups. Drive one row LOW at a time, then read columns.</li>
+          <li>Scan all rows in sequence; debounce in firmware (≥ 5 ms, or use a proper debounce library).</li>
+          <li>On OpenFFBoard, connect the matrix to the <strong>SPI/I²C button expander</strong> header or directly to spare GPIO via the generic HID interface.</li>
+        </ul>
+        <div class="info-box" style="margin-top:16px;">
+          <strong>OpenFFBoard tip:</strong> The firmware supports up to
+          <strong>128 buttons</strong> over I²C GPIO expanders (MCP23017 etc.).
+          A 4×4 matrix directly on MCU GPIO or an expander covers most steering wheel needs.
+        </div>
+      </div>
+
+      <!-- Optimal matrix sizes reference -->
+      <div class="panel" style="margin-top:24px;">
+        <p class="panel-title">Optimal Matrix Sizes Quick Reference</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Buttons Needed</th>
+              <th>Best Matrix</th>
+              <th>GPIO Pins</th>
+              <th>Diodes</th>
+              <th>Unused Slots</th>
+            </tr>
+          </thead>
+          <tbody id="ref-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Open-source &bull;
+        <a href="https://github.com/ayrtonricardo/steering-wheel-tools" target="_blank" rel="noopener">View on GitHub</a>
+        &bull; Not affiliated with the OpenFFBoard project
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Find the matrix with minimum total pins that can fit n buttons
+    function autoMatrix(n) {
+      let best = null;
+      for (let r = 1; r <= n; r++) {
+        for (let c = r; c <= n; c++) {
+          if (r * c >= n) {
+            const pins = r + c;
+            if (!best || pins < best.pins || (pins === best.pins && Math.abs(r - c) < Math.abs(best.r - best.c))) {
+              best = { r, c, pins };
+            }
+            break; // c is the smallest valid c for this r, no need to go further
+          }
+        }
+      }
+      return best;
+    }
+
+    function squareMatrix(n) {
+      const r = Math.ceil(Math.sqrt(n));
+      const c = Math.ceil(n / r);
+      return { r, c, pins: r + c };
+    }
+
+    function buildRefTable() {
+      const targets = [4, 8, 12, 16, 20, 24, 32, 48, 64];
+      const tbody = document.getElementById('ref-body');
+      tbody.innerHTML = '';
+      targets.forEach(n => {
+        const m = autoMatrix(n);
+        const unused = m.r * m.c - n;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${n}</td>
+          <td class="highlight-cell">${m.r} × ${m.c}</td>
+          <td>${m.pins}</td>
+          <td>${n}</td>
+          <td>${unused}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function buildMatrixVis(rows, cols, numButtons) {
+      const container = document.getElementById('matrix-visual');
+      container.innerHTML = '';
+
+      const grid = document.createElement('div');
+      grid.className = 'matrix-vis';
+      grid.style.gridTemplateColumns = `repeat(${cols + 1}, auto)`;
+
+      // Column header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'matrix-row';
+      // Empty corner
+      const corner = document.createElement('div');
+      corner.className = 'matrix-cell header-row';
+      headerRow.appendChild(corner);
+      for (let c = 0; c < cols; c++) {
+        const hdr = document.createElement('div');
+        hdr.className = 'matrix-cell header-row';
+        hdr.textContent = `C${c + 1}`;
+        headerRow.appendChild(hdr);
+      }
+      grid.appendChild(headerRow);
+
+      let btnIdx = 1;
+      for (let r = 0; r < rows; r++) {
+        const row = document.createElement('div');
+        row.className = 'matrix-row';
+
+        // Row label
+        const lbl = document.createElement('div');
+        lbl.className = 'matrix-cell header-row';
+        lbl.textContent = `R${r + 1}`;
+        row.appendChild(lbl);
+
+        for (let c = 0; c < cols; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'matrix-cell';
+          if (btnIdx <= numButtons) {
+            cell.classList.add('used');
+            cell.textContent = `B${btnIdx}`;
+            btnIdx++;
+          }
+          row.appendChild(cell);
+        }
+        grid.appendChild(row);
+      }
+
+      container.appendChild(grid);
+    }
+
+    function buildPinList(rows, cols, startPin = 2) {
+      const rowPins  = document.getElementById('row-pins');
+      const colPins  = document.getElementById('col-pins');
+      rowPins.innerHTML = '';
+      colPins.innerHTML = '';
+
+      for (let r = 0; r < rows; r++) {
+        const chip = document.createElement('span');
+        chip.className = 'pin-chip pin-row-chip';
+        chip.textContent = `R${r + 1} → D${startPin + r}`;
+        rowPins.appendChild(chip);
+      }
+      for (let c = 0; c < cols; c++) {
+        const chip = document.createElement('span');
+        chip.className = 'pin-chip pin-col-chip';
+        chip.textContent = `C${c + 1} → D${startPin + rows + c}`;
+        colPins.appendChild(chip);
+      }
+    }
+
+    function calculate() {
+      const numButtons = parseInt(document.getElementById('numButtons').value) || 1;
+      const mode       = document.getElementById('matrixMode').value;
+      const diodes     = document.getElementById('diodeType').value === 'yes';
+      const mcuPins    = parseInt(document.getElementById('mcuPins').value) || 20;
+
+      let rows, cols;
+      if (mode === 'manual') {
+        rows = parseInt(document.getElementById('manualRows').value) || 1;
+        cols = parseInt(document.getElementById('manualCols').value) || 1;
+      } else if (mode === 'square') {
+        const m = squareMatrix(numButtons);
+        rows = m.r; cols = m.c;
+      } else {
+        const m = autoMatrix(numButtons);
+        rows = m.r; cols = m.c;
+      }
+
+      const totalCells  = rows * cols;
+      const pinsNeeded  = rows + cols;
+      const diodeCount  = diodes ? numButtons : 0;
+      const unused      = totalCells - numButtons;
+
+      document.getElementById('res-rows').textContent   = rows;
+      document.getElementById('res-cols').textContent   = cols;
+      document.getElementById('res-cells').textContent  = totalCells;
+      document.getElementById('res-unused').textContent = `${unused < 0 ? 'INSUFFICIENT!' : unused + ' unused slot' + (unused !== 1 ? 's' : '')}`;
+      document.getElementById('res-pins').textContent   = pinsNeeded;
+      document.getElementById('res-diodes').textContent = diodeCount || '0 (not recommended)';
+
+      const badge = document.getElementById('pin-status');
+      if (unused < 0) {
+        badge.className = 'status-badge status-bad';
+        badge.textContent = `Matrix too small — needs ${-unused} more cell(s)`;
+      } else if (pinsNeeded > mcuPins) {
+        badge.className = 'status-badge status-bad';
+        badge.textContent = `Needs ${pinsNeeded} pins — exceeds MCU limit (${mcuPins})`;
+      } else if (pinsNeeded > mcuPins * 0.75) {
+        badge.className = 'status-badge status-warn';
+        badge.textContent = `${pinsNeeded} of ${mcuPins} GPIO pins used`;
+      } else {
+        badge.className = 'status-badge status-ok';
+        badge.textContent = `${pinsNeeded} of ${mcuPins} GPIO pins used — fits`;
+      }
+
+      buildMatrixVis(rows, cols, numButtons);
+      buildPinList(rows, cols);
+    }
+
+    // Toggle manual fields
+    document.getElementById('matrixMode').addEventListener('change', function () {
+      document.getElementById('manual-fields').style.display =
+        this.value === 'manual' ? '' : 'none';
+      calculate();
+    });
+
+    ['numButtons','manualRows','manualCols','diodeType','mcuPins'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculate);
+    });
+
+    buildRefTable();
+    calculate();
+  </script>
+</body>
+</html>

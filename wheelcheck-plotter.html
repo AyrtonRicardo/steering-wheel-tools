@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WheelCheck CSV Plotter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow:wght@300;400;600;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0f14;
+  --surface: #13161e;
+  --border: #1f2433;
+  --border2: #2a3048;
+  --accent: #00d4ff;
+  --accent2: #ff4d6d;
+  --accent3: #39ff8f;
+  --text: #b8c4d8;
+  --dim: #4a5570;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Barlow', sans-serif;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+  pointer-events: none; z-index: 100;
+}
+
+/* DROP SCREEN */
+#dropScreen {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  background: var(--bg); transition: background 0.2s;
+}
+#dropScreen.drag-over { background: rgba(0,212,255,0.03); }
+
+.drop-box {
+  width: 460px; padding: 48px 40px;
+  border: 1px solid var(--border2); border-radius: 4px;
+  text-align: center; position: relative; overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.drop-box::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(0,212,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+#dropScreen.drag-over .drop-box { border-color: var(--accent); background: rgba(0,212,255,0.04); }
+
+.drop-icon { font-size: 44px; margin-bottom: 14px; opacity: 0.5; }
+.drop-title { font-family: var(--sans); font-weight: 800; font-size: 20px; color: #fff; margin-bottom: 8px; }
+.drop-sub { font-size: 12px; color: var(--dim); line-height: 1.7; }
+.drop-sub strong { color: var(--accent); }
+.browse-btn {
+  margin-top: 22px; padding: 10px 28px;
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--mono); font-size: 11px;
+  cursor: pointer; border-radius: 2px; transition: all 0.15s;
+}
+.browse-btn:hover { border-color: var(--accent); color: var(--accent); }
+.drop-hint { font-size: 10px; color: var(--dim); font-family: var(--mono); letter-spacing: 1px; }
+.error-bar {
+  display: none; background: rgba(255,77,109,0.1); border: 1px solid rgba(255,77,109,0.3);
+  border-radius: 2px; padding: 10px 16px; font-size: 11px; color: var(--accent2);
+  font-family: var(--mono); max-width: 460px; text-align: center;
+}
+
+/* APP */
+#app { display: none; height: 100vh; flex-direction: column; }
+
+/* Topbar */
+.topbar {
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--border); flex-shrink: 0; height: 44px;
+}
+.topbar-brand {
+  padding: 0 20px; border-right: 1px solid var(--border);
+  font-family: var(--sans); font-weight: 800; font-size: 13px;
+  color: var(--accent); letter-spacing: 1px; text-transform: uppercase;
+  white-space: nowrap; height: 100%; display: flex; align-items: center;
+}
+.topbar-info {
+  padding: 0 16px; font-family: var(--mono); font-size: 10px; color: var(--dim);
+  flex: 1; border-right: 1px solid var(--border); height: 100%; display: flex; align-items: center; gap: 20px;
+}
+.topbar-info b { color: var(--text); font-weight: 400; }
+.topbar-actions { display: flex; height: 100%; }
+.tbar-btn {
+  padding: 0 16px; background: none; border: none; border-left: 1px solid var(--border);
+  color: var(--dim); font-family: var(--mono); font-size: 10px; cursor: pointer;
+  transition: color 0.15s; white-space: nowrap;
+}
+.tbar-btn:hover { color: var(--accent); }
+.tbar-btn.add { color: rgba(57,255,143,0.7); }
+.tbar-btn.add:hover { color: var(--accent3); }
+
+/* Body */
+.body { display: grid; grid-template-columns: 1fr 250px; flex: 1; overflow: hidden; }
+
+/* Chart panel */
+.chart-panel { display: flex; flex-direction: column; padding: 16px 20px; gap: 12px; overflow: hidden; }
+.chart-toolbar { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.chart-tabs { display: flex; gap: 1px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.tab {
+  padding: 6px 14px; font-family: var(--mono); font-size: 10px;
+  background: var(--surface); color: var(--dim); border: none; cursor: pointer;
+  transition: all 0.15s; letter-spacing: 0.5px;
+}
+.tab.active { background: var(--border2); color: var(--accent); }
+.tab:hover:not(.active) { color: var(--text); }
+.spacer { flex: 1; }
+.smooth-inline {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 10px; color: var(--dim);
+}
+.smooth-inline input[type=range] {
+  width: 80px; height: 2px; -webkit-appearance: none; background: var(--border2); outline: none;
+}
+.smooth-inline input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
+}
+.smooth-inline span { color: var(--accent); min-width: 18px; }
+
+.chart-wrap {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 2px; padding: 16px; position: relative; min-height: 0;
+}
+
+/* Sidebar */
+.sidebar {
+  border-left: 1px solid var(--border); display: flex; flex-direction: column;
+  overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.sb-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.sb-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--dim); margin-bottom: 10px; }
+
+/* File list */
+.file-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 9px; border-radius: 2px; margin-bottom: 6px;
+  background: var(--bg); border: 1px solid var(--border);
+  transition: border-color 0.15s;
+}
+.file-item.muted { opacity: 0.35; }
+.file-swatch { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.file-name {
+  font-family: var(--mono); font-size: 9px; color: var(--text); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.file-pts { font-family: var(--mono); font-size: 9px; color: var(--dim); flex-shrink: 0; }
+.file-vis-btn {
+  background: none; border: none; cursor: pointer; padding: 1px 3px;
+  font-size: 10px; color: var(--dim); flex-shrink: 0; transition: color 0.15s;
+}
+.file-vis-btn:hover { color: var(--text); }
+.file-remove {
+  background: none; border: none; cursor: pointer; padding: 1px 3px;
+  font-size: 13px; color: var(--dim); flex-shrink: 0; transition: color 0.15s; line-height: 1;
+}
+.file-remove:hover { color: var(--accent2); }
+
+/* Compare table */
+.compare-table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 9px; }
+.compare-table th {
+  text-align: left; color: var(--dim); padding: 3px 5px; font-weight: 400;
+  border-bottom: 1px solid var(--border); letter-spacing: 0.5px;
+}
+.compare-table td { padding: 5px 5px; border-bottom: 1px solid rgba(31,36,51,0.5); }
+.compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+.td-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70px; }
+.td-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* Toggle */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; font-size: 10px; color: var(--dim);
+}
+.toggle {
+  width: 28px; height: 14px; background: var(--border2); border-radius: 7px;
+  position: relative; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0;
+}
+.toggle::after {
+  content: ''; position: absolute; width: 10px; height: 10px;
+  border-radius: 50%; background: var(--dim); top: 2px; left: 2px; transition: all 0.2s;
+}
+.toggle.on { background: rgba(0,212,255,0.25); }
+.toggle.on::after { background: var(--accent); transform: translateX(14px); }
+
+/* Export */
+.export-btn {
+  width: 100%; padding: 9px; background: rgba(57,255,143,0.07);
+  border: 1px solid rgba(57,255,143,0.25); color: var(--accent3);
+  font-family: var(--mono); font-size: 10px; cursor: pointer; border-radius: 2px;
+  letter-spacing: 1px; text-transform: uppercase; transition: all 0.15s; margin-bottom: 7px;
+}
+.export-btn:hover { background: rgba(57,255,143,0.14); }
+.export-btn:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<!-- DROP SCREEN -->
+<div id="dropScreen">
+  <div class="drop-box" id="dropBox">
+    <div class="drop-icon">📂</div>
+    <div class="drop-title">Drop WheelCheck CSVs</div>
+    <div class="drop-sub">
+      Drop <strong>one or multiple</strong> <strong>log2_*.csv</strong> files<br>
+      to plot and compare their linearity curves side by side.<br><br>
+      Columns: <strong>Force</strong> &amp; <strong>DeltaXdeg</strong> · processed locally, nothing uploaded.
+    </div>
+    <button class="browse-btn" id="browseBtn">Browse files…</button>
+    <input type="file" id="fileInput" accept=".csv" multiple style="display:none">
+  </div>
+  <div class="drop-hint">DRAG &amp; DROP MULTIPLE FILES AT ONCE · OR BROWSE</div>
+  <div class="error-bar" id="errorBar"></div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">⚙ WheelCheck</div>
+    <div class="topbar-info">
+      Files loaded: <b id="topFiles">0</b>
+      &nbsp;&nbsp;Total points: <b id="topPts">0</b>
+    </div>
+    <div class="topbar-actions">
+      <button class="tbar-btn add" id="addMoreBtn">+ Add more files</button>
+      <input type="file" id="addFileInput" accept=".csv" multiple style="display:none">
+      <button class="tbar-btn" id="clearBtn">✕ Clear all</button>
+    </div>
+  </div>
+
+  <div class="body">
+    <div class="chart-panel">
+      <div class="chart-toolbar">
+        <div class="chart-tabs">
+          <button class="tab active" data-tab="smooth">Smoothed</button>
+          <button class="tab" data-tab="raw">Raw</button>
+          <button class="tab" data-tab="lut">LUT</button>
+          <button class="tab" data-tab="diff">Deviation</button>
+        </div>
+        <div class="spacer"></div>
+        <div class="smooth-inline">
+          Smooth
+          <input type="range" id="smoothSlider" min="1" max="25" step="1" value="5">
+          <span id="smoothVal">5</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="sb-section">
+        <div class="sb-label">Files</div>
+        <div id="fileList"><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">No files loaded</div></div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-label">Display</div>
+        <div class="toggle-row">
+          <span>Identity line</span>
+          <button class="toggle on" id="togIdentity"></button>
+        </div>
+        <div class="toggle-row">
+          <span>Fill area</span>
+          <button class="toggle" id="togFill"></button>
+        </div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-label">Comparison</div>
+        <div style="overflow-x:auto">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>File</th>
+                <th>Deadzone</th>
+                <th>Dev%</th>
+                <th>Pts</th>
+              </tr>
+            </thead>
+            <tbody id="compareBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="sb-section" style="flex:1">
+        <div class="sb-label">Export (first visible)</div>
+        <button class="export-btn" id="exportLut">↓ .lut  (Assetto Corsa)</button>
+        <button class="export-btn" id="exportCube">↓ .cube (1D LUT)</button>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ── PALETTE ─────────────────────────────────────────────────────
+const PALETTE = [
+  { solid: '#00d4ff', fill: 'rgba(0,212,255,0.08)' },
+  { solid: '#39ff8f', fill: 'rgba(57,255,143,0.08)' },
+  { solid: '#ff4d6d', fill: 'rgba(255,77,109,0.08)' },
+  { solid: '#ffd166', fill: 'rgba(255,209,102,0.08)' },
+  { solid: '#c77dff', fill: 'rgba(199,125,255,0.08)' },
+  { solid: '#ff9f1c', fill: 'rgba(255,159,28,0.08)' },
+  { solid: '#06d6a0', fill: 'rgba(6,214,160,0.08)' },
+  { solid: '#ef476f', fill: 'rgba(239,71,111,0.08)' },
+];
+
+// ── STATE ───────────────────────────────────────────────────────
+let files = [];
+let activeTab = 'smooth';
+let smoothWindow = 5;
+let showIdentity = true;
+let showFill = false;
+let chart = null;
+let colorIdx = 0;
+
+// ── CSV PARSER ──────────────────────────────────────────────────
+function parseCSV(text, filename) {
+  const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) throw new Error(filename + ': fewer than 2 lines');
+  const sep = lines[0].includes(';') ? ';' : ',';
+  const headers = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
+
+  const findCol = (...names) => {
+    for (const n of names) {
+      const idx = headers.findIndex(h => h.toLowerCase().includes(n.toLowerCase()));
+      if (idx !== -1) return idx;
+    }
+    return -1;
+  };
+
+  let forceIdx = findCol('Force', 'force', 'FFB', 'input');
+  let deltaIdx = findCol('DeltaXdeg', 'delta', 'output', 'response', 'deg');
+  if (forceIdx === -1 || deltaIdx === -1) { forceIdx = 0; deltaIdx = 1; }
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
+    const f = parseFloat(cols[forceIdx]);
+    const d = parseFloat(cols[deltaIdx]);
+    if (!isNaN(f) && !isNaN(d)) rows.push({ force: f, delta: d });
+  }
+  if (rows.length < 5) throw new Error(filename + ': too few data rows');
+  return { rows, headers, forceIdx, deltaIdx };
+}
+
+// ── MATH ────────────────────────────────────────────────────────
+function movingAvg(data, w) {
+  if (w <= 1) return [...data];
+  return data.map((_, i) => {
+    const h = Math.floor(w / 2);
+    const sl = data.slice(Math.max(0, i - h), Math.min(data.length, i + h + 1));
+    return sl.reduce((a, b) => a + b, 0) / sl.length;
+  });
+}
+
+function normalize(arr) {
+  const mx = Math.max(...arr);
+  return mx === 0 ? arr.map(() => 0) : arr.map(v => v / mx);
+}
+
+function computeMetrics(rows) {
+  const normF = normalize(rows.map(r => r.force));
+  const normD = normalize(rows.map(r => r.delta));
+  const dzIdx = normD.findIndex(v => v > 0.02);
+  const deadzone = dzIdx >= 0 ? (normF[dzIdx] * 100).toFixed(1) + '%' : 'n/a';
+  const deviations = normF.map((f, i) => Math.abs(normD[i] - f));
+  const avgDev = (deviations.reduce((a, b) => a + b, 0) / deviations.length * 100).toFixed(1);
+  return { deadzone, avgDev };
+}
+
+function generateLUT(forces, smoothedDeltas, n = 100) {
+  const maxF = Math.max(...forces);
+  const maxD = Math.max(...smoothedDeltas);
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n;
+    const target = t * maxF;
+    let closest = 0, minDist = Infinity;
+    forces.forEach((f, j) => { const d = Math.abs(f - target); if (d < minDist) { minDist = d; closest = j; } });
+    return { x: t, y: Math.min(1, Math.max(0, smoothedDeltas[closest] / maxD)) };
+  });
+}
+
+function getProcessed(file) {
+  const forces = file.rows.map(r => r.force);
+  const deltas = file.rows.map(r => r.delta);
+  const sDeltas = movingAvg(deltas, smoothWindow);
+  return { normF: normalize(forces), normD: normalize(sDeltas), normDRaw: normalize(deltas), forces, sDeltas };
+}
+
+// ── CHART ───────────────────────────────────────────────────────
+function buildChart() {
+  if (chart) { chart.destroy(); chart = null; }
+  const visible = files.filter(f => f.visible);
+  if (visible.length === 0) return;
+
+  const datasets = [];
+
+  if (showIdentity) {
+    datasets.push({
+      label: '__id',
+      data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+      borderColor: 'rgba(74,85,112,0.4)', borderWidth: 1,
+      borderDash: [5, 5], pointRadius: 0, fill: false, tension: 0, order: 999,
+    });
+  }
+
+  visible.forEach((file, idx) => {
+    const { normF, normD, normDRaw, forces, sDeltas } = getProcessed(file);
+    const col = file.color;
+
+    if (activeTab === 'smooth') {
+      datasets.push({
+        label: file.name,
+        data: normF.map((f, i) => ({ x: f, y: normD[i] })),
+        borderColor: col.solid,
+        backgroundColor: showFill ? col.fill : 'transparent',
+        borderWidth: 2, pointRadius: 0, fill: showFill, tension: 0.4, order: idx,
+      });
+    } else if (activeTab === 'raw') {
+      datasets.push({
+        label: file.name,
+        data: normalize(file.rows.map(r => r.force)).map((f, i) => ({ x: f, y: normDRaw[i] })),
+        borderColor: col.solid,
+        backgroundColor: showFill ? col.fill : 'transparent',
+        borderWidth: 1.5, pointRadius: 0, fill: showFill, tension: 0.2, order: idx,
+      });
+    } else if (activeTab === 'lut') {
+      const lut = generateLUT(forces, sDeltas);
+      datasets.push({
+        label: file.name,
+        data: lut,
+        borderColor: col.solid,
+        backgroundColor: showFill ? col.fill : 'transparent',
+        borderWidth: 2, pointRadius: 0, fill: showFill, tension: 0.4, order: idx,
+      });
+    } else if (activeTab === 'diff') {
+      datasets.push({
+        label: file.name,
+        data: normF.map((f, i) => ({ x: f, y: normD[i] - f })),
+        borderColor: col.solid,
+        backgroundColor: showFill ? col.fill : 'transparent',
+        borderWidth: 2, pointRadius: 0, fill: showFill, tension: 0.4, order: idx,
+      });
+    }
+  });
+
+  const isDiff = activeTab === 'diff';
+  const ctx = document.getElementById('mainChart').getContext('2d');
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 220 },
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: {
+          type: 'linear', min: 0, max: 1,
+          title: { display: true, text: 'Force Input (normalized)', color: '#4a5570', font: { family: 'Space Mono', size: 10 } },
+          grid: { color: '#1f2433' },
+          ticks: { color: '#4a5570', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 6 },
+        },
+        y: {
+          type: 'linear',
+          min: isDiff ? undefined : 0,
+          max: isDiff ? undefined : 1,
+          title: { display: true, text: isDiff ? 'Δ (Response − Force)' : 'Wheel Response (normalized)', color: '#4a5570', font: { family: 'Space Mono', size: 10 } },
+          grid: { color: '#1f2433' },
+          ticks: { color: '#4a5570', font: { family: 'Space Mono', size: 9 }, maxTicksLimit: 6 },
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#13161e', borderColor: '#2a3048', borderWidth: 1,
+          titleColor: '#4a5570', titleFont: { family: 'Space Mono', size: 9 },
+          bodyFont: { family: 'Space Mono', size: 10 },
+          callbacks: {
+            title: items => 'FORCE  ' + items[0].parsed.x.toFixed(4),
+            label: item => {
+              if (item.dataset.label === '__id') return null;
+              const name = item.dataset.label.replace('.csv','').slice(0, 16);
+              const prefix = isDiff ? 'DEV ' : 'OUT ';
+              return name + '  ' + prefix + item.parsed.y.toFixed(4);
+            },
+            labelColor: item => ({ borderColor: item.dataset.borderColor, backgroundColor: item.dataset.borderColor }),
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── UI ──────────────────────────────────────────────────────────
+function renderFileList() {
+  const el = document.getElementById('fileList');
+  if (files.length === 0) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--dim);font-family:var(--mono)">No files loaded</div>';
+    return;
+  }
+  el.innerHTML = files.map(f => `
+    <div class="file-item ${f.visible ? '' : 'muted'}">
+      <div class="file-swatch" style="background:${f.color.solid}"></div>
+      <div class="file-name" title="${f.name}">${f.name}</div>
+      <div class="file-pts">${f.rows.length}</div>
+      <button class="file-vis-btn" data-action="vis" data-id="${f.id}">${f.visible ? '👁' : '🚫'}</button>
+      <button class="file-remove" data-action="remove" data-id="${f.id}">×</button>
+    </div>
+  `).join('');
+}
+
+function renderCompareTable() {
+  const tbody = document.getElementById('compareBody');
+  tbody.innerHTML = files.map(f => {
+    const m = computeMetrics(f.rows);
+    return `<tr>
+      <td><span class="td-dot" style="background:${f.color.solid}"></span></td>
+      <td class="td-name" title="${f.name}">${f.name.replace('.csv', '')}</td>
+      <td style="color:${f.color.solid}">${m.deadzone}</td>
+      <td style="color:${f.color.solid}">${m.avgDev}%</td>
+      <td style="color:var(--dim)">${f.rows.length}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTopInfo() {
+  document.getElementById('topFiles').textContent = files.length;
+  document.getElementById('topPts').textContent = files.reduce((s, f) => s + f.rows.length, 0).toLocaleString();
+}
+
+function refreshAll() {
+  renderFileList();
+  renderCompareTable();
+  renderTopInfo();
+  buildChart();
+}
+
+// ── LOAD ────────────────────────────────────────────────────────
+function loadFiles(fileList) {
+  const arr = Array.from(fileList);
+  arr.forEach(file => {
+    if (!file.name.endsWith('.csv')) { showError('Skipped non-CSV: ' + file.name); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = parseCSV(e.target.result, file.name);
+        files.push({
+          id: Date.now() + Math.random(),
+          name: file.name,
+          rows: parsed.rows,
+          color: PALETTE[colorIdx % PALETTE.length],
+          visible: true,
+        });
+        colorIdx++;
+        document.getElementById('dropScreen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        refreshAll();
+      } catch (err) { showError(err.message); }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// ── EXPORT ──────────────────────────────────────────────────────
+function getExportFile() { return files.find(f => f.visible) || files[0]; }
+
+document.getElementById('exportLut').addEventListener('click', () => {
+  const f = getExportFile(); if (!f) return;
+  const forces = f.rows.map(r => r.force);
+  const sD = movingAvg(f.rows.map(r => r.delta), smoothWindow);
+  const lut = generateLUT(forces, sD, 100);
+  const maxF = Math.max(...forces);
+  dl(f.name.replace('.csv', '') + '.lut', lut.map(p => Math.round(p.x * maxF) + '|' + p.y.toFixed(5)).join('\n'));
+});
+
+document.getElementById('exportCube').addEventListener('click', () => {
+  const f = getExportFile(); if (!f) return;
+  const forces = f.rows.map(r => r.force);
+  const sD = movingAvg(f.rows.map(r => r.delta), smoothWindow);
+  const lut = generateLUT(forces, sD, 64);
+  let out = '# WheelCheck LUT — ' + f.name + '\nLUT_1D_SIZE 65\n\n';
+  lut.forEach(p => { const v = p.y.toFixed(6); out += v + ' ' + v + ' ' + v + '\n'; });
+  dl(f.name.replace('.csv', '') + '.cube', out);
+});
+
+function dl(name, content) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: 'text/plain' }));
+  a.download = name; a.click();
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBar');
+  el.textContent = '⚠ ' + msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 5000);
+}
+
+// ── EVENTS ──────────────────────────────────────────────────────
+// Drop screen
+const dropScreen = document.getElementById('dropScreen');
+dropScreen.addEventListener('dragover', e => { e.preventDefault(); dropScreen.classList.add('drag-over'); });
+dropScreen.addEventListener('dragleave', () => dropScreen.classList.remove('drag-over'));
+dropScreen.addEventListener('drop', e => { e.preventDefault(); dropScreen.classList.remove('drag-over'); loadFiles(e.dataTransfer.files); });
+document.getElementById('browseBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => loadFiles(e.target.files));
+
+// App-level drop (add more by dropping onto chart)
+document.getElementById('app').addEventListener('dragover', e => e.preventDefault());
+document.getElementById('app').addEventListener('drop', e => { e.preventDefault(); loadFiles(e.dataTransfer.files); });
+
+// Add more / clear
+document.getElementById('addMoreBtn').addEventListener('click', () => document.getElementById('addFileInput').click());
+document.getElementById('addFileInput').addEventListener('change', e => loadFiles(e.target.files));
+document.getElementById('clearBtn').addEventListener('click', () => {
+  files = []; colorIdx = 0;
+  if (chart) { chart.destroy(); chart = null; }
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('dropScreen').style.display = 'flex';
+  refreshAll();
+});
+
+// File list buttons
+document.getElementById('fileList').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]'); if (!btn) return;
+  const id = parseFloat(btn.dataset.id);
+  if (btn.dataset.action === 'vis') {
+    const f = files.find(x => x.id === id); if (f) { f.visible = !f.visible; refreshAll(); }
+  } else if (btn.dataset.action === 'remove') {
+    files = files.filter(x => x.id !== id);
+    if (files.length === 0) {
+      if (chart) { chart.destroy(); chart = null; }
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('dropScreen').style.display = 'flex';
+    }
+    refreshAll();
+  }
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); activeTab = btn.dataset.tab; buildChart();
+  });
+});
+
+// Smoothing
+document.getElementById('smoothSlider').addEventListener('input', function() {
+  smoothWindow = parseInt(this.value);
+  document.getElementById('smoothVal').textContent = smoothWindow;
+  buildChart();
+});
+
+// Toggles
+function bindToggle(id, setter) {
+  const btn = document.getElementById(id);
+  btn.addEventListener('click', () => { btn.classList.toggle('on'); setter(btn.classList.contains('on')); buildChart(); });
+}
+bindToggle('togIdentity', v => showIdentity = v);
+bindToggle('togFill', v => showFill = v);
+</script>
+</body>
+</html>
