@@ -8,6 +8,15 @@
         </RouterLink>
         <nav class="site-nav">
           <RouterLink to="/" class="nav-link" :class="{ active: route.path === '/' }">Home</RouterLink>
+          <div class="nav-dropdown" :class="{ active: isDriverSetupActive }">
+            <button class="nav-link nav-dropdown-trigger" :class="{ active: isDriverSetupActive }">
+              Driver Setup <span class="nav-dropdown-arrow">&#9660;</span>
+            </button>
+            <div class="nav-dropdown-menu">
+              <RouterLink to="/vesc-setup" class="nav-dropdown-item" :class="{ active: route.path === '/vesc-setup' }">VESC Setup</RouterLink>
+              <RouterLink to="/tmc-setup" class="nav-dropdown-item" :class="{ active: route.path === '/tmc-setup' }">TMC Setup</RouterLink>
+            </div>
+          </div>
           <div class="nav-dropdown" :class="{ active: isCalcsActive }">
             <button class="nav-link nav-dropdown-trigger" :class="{ active: isCalcsActive }">
               Calculators <span class="nav-dropdown-arrow">&#9660;</span>
@@ -25,15 +34,6 @@
             <div class="nav-dropdown-menu">
               <RouterLink to="/button-matrix" class="nav-dropdown-item" :class="{ active: route.path === '/button-matrix' }">Button Matrix</RouterLink>
               <RouterLink to="/wheelcheck-plotter" class="nav-dropdown-item" :class="{ active: route.path === '/wheelcheck-plotter' }">WheelCheck LUT Plotter</RouterLink>
-            </div>
-          </div>
-          <div class="nav-dropdown" :class="{ active: isDriverSetupActive }">
-            <button class="nav-link nav-dropdown-trigger" :class="{ active: isDriverSetupActive }">
-              Driver Setup <span class="nav-dropdown-arrow">&#9660;</span>
-            </button>
-            <div class="nav-dropdown-menu">
-              <RouterLink to="/vesc-setup" class="nav-dropdown-item" :class="{ active: route.path === '/vesc-setup' }">VESC Setup</RouterLink>
-              <RouterLink to="/tmc-setup" class="nav-dropdown-item" :class="{ active: route.path === '/tmc-setup' }">TMC Setup</RouterLink>
             </div>
           </div>
         </nav>

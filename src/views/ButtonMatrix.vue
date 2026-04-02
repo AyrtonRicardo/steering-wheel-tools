@@ -99,9 +99,6 @@
 
           <StatusBadge :type="pinBadge.type" :text="pinBadge.text" />
 
-          <!-- Calculation breakdown -->
-          <CalcBreakdown :steps="steps" />
-
           <div class="divider"></div>
 
           <p class="panel-title" style="margin-bottom:8px;">Pin Assignment</p>
@@ -117,6 +114,11 @@
               C{{ i }} → D{{ 1 + r.rows + i }}
             </span>
           </div>
+        </div>
+
+        <!-- Calculation breakdown -->
+        <div class="panel breakdown-panel">
+          <CalcBreakdown :steps="steps" />
         </div>
 
       </div>
@@ -197,6 +199,14 @@
     </div>
   </main>
 </template>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>
 
 <script setup>
 import { reactive, computed } from 'vue'

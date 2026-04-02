@@ -50,52 +50,57 @@
         </div>
 
         <!-- Results -->
-        <div>
-          <div class="panel" style="margin-bottom: 20px;">
-            <div class="panel-title">Results — Enter in VESC Tool</div>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">
-              Motor Settings → FOC → General → Current Controller Gains
-            </p>
+        <div class="panel">
+          <div class="panel-title">Results — Enter in VESC Tool</div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">
+            Motor Settings → FOC → General → Current Controller Gains
+          </p>
 
-            <div class="result-grid">
-              <div class="result-card highlight">
-                <div class="result-label">Kp (proportional)</div>
-                <div class="result-value">{{ fmt(Kp) }}</div>
-                <div class="result-note">= L / τ</div>
-              </div>
-              <div class="result-card highlight">
-                <div class="result-label">Ki (integral)</div>
-                <div class="result-value">{{ fmt(Ki) }}</div>
-                <div class="result-note">= R / τ</div>
-              </div>
-              <div class="result-card">
-                <div class="result-label">PI loop bandwidth</div>
-                <div class="result-value">{{ Math.round(bandwidth_hz) }} <span class="result-unit">Hz</span></div>
-                <div class="result-note">ωn / 2π</div>
-              </div>
-              <div class="result-card">
-                <div class="result-label">Motor time constant</div>
-                <div class="result-value">{{ (motor_tau * 1000).toFixed(2) }} <span class="result-unit">ms</span></div>
-                <div class="result-note">L / R — natural motor pole</div>
-              </div>
+          <div class="result-grid">
+            <div class="result-card highlight">
+              <div class="result-label">Kp (proportional)</div>
+              <div class="result-value">{{ fmt(Kp) }}</div>
+              <div class="result-note">= L / τ</div>
             </div>
-
-            <div class="info-box">
-              <strong>Guidance only.</strong> These values are calculated from idealized formulas and should be treated as a starting point. Verify behaviour on your specific hardware — reduce gains if the motor oscillates or makes noise.
+            <div class="result-card highlight">
+              <div class="result-label">Ki (integral)</div>
+              <div class="result-value">{{ fmt(Ki) }}</div>
+              <div class="result-note">= R / τ</div>
+            </div>
+            <div class="result-card">
+              <div class="result-label">PI loop bandwidth</div>
+              <div class="result-value">{{ Math.round(bandwidth_hz) }} <span class="result-unit">Hz</span></div>
+              <div class="result-note">ωn / 2π</div>
+            </div>
+            <div class="result-card">
+              <div class="result-label">Motor time constant</div>
+              <div class="result-value">{{ (motor_tau * 1000).toFixed(2) }} <span class="result-unit">ms</span></div>
+              <div class="result-note">L / R — natural motor pole</div>
             </div>
           </div>
 
-          <!-- Step-by-step breakdown -->
-          <div class="panel">
-            <div class="panel-title">Calculation Breakdown</div>
-            <CalcBreakdown :steps="breakdown" />
+          <div class="info-box">
+            <strong>Guidance only.</strong> These values are calculated from idealized formulas and should be treated as a starting point. Verify behaviour on your specific hardware — reduce gains if the motor oscillates or makes noise.
           </div>
+        </div>
+
+        <!-- Step-by-step breakdown -->
+        <div class="panel breakdown-panel">
+          <CalcBreakdown :steps="breakdown" />
         </div>
 
       </div>
     </div>
   </main>
 </template>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>
 
 <script setup>
 import { ref, computed } from 'vue'

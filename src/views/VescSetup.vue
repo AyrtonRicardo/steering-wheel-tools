@@ -11,6 +11,36 @@
         </p>
       </div>
 
+      <!-- Board variant selector -->
+      <div class="board-selector">
+        <label class="board-option" :class="{ active: useOfficialBoard }">
+          <input type="radio" :value="true" v-model="useOfficialBoard" />
+          <span class="board-option-icon">🟢</span>
+          <span class="board-option-text">
+            <strong>Official OpenFFBoard</strong>
+            <span>Recommended — pre-built board from the OpenFFBoard project</span>
+          </span>
+        </label>
+        <label class="board-option" :class="{ active: !useOfficialBoard }">
+          <input type="radio" :value="false" v-model="useOfficialBoard" />
+          <span class="board-option-icon">🔧</span>
+          <span class="board-option-text">
+            <strong>Custom / Discovery STM32 Board</strong>
+            <span>STM32 + TJA1051 CAN transceiver wired manually</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Discord support banner -->
+      <div class="discord-banner">
+        <span class="discord-banner-icon">💬</span>
+        <span class="discord-banner-text">
+          Stuck or unsure about any step?
+          <a href="https://discord.com/servers/openffboard-704355326291607614" target="_blank" rel="noopener">Join the OpenFFBoard Discord</a>
+          — the community is active and happy to help.
+        </span>
+      </div>
+
       <!-- Progress bar -->
       <div class="vesc-progress-wrap">
         <div class="vesc-progress-top">
@@ -83,11 +113,11 @@
                 </label>
 
                 <!-- Step image -->
-                <div v-if="step.image" class="vesc-step-image" :class="{ 'vesc-step-image--ui': step.imageSize === 'ui' }">
+                <div v-if="step.image || step.imageOfficial" class="vesc-step-image" :class="{ 'vesc-step-image--ui': step.imageSize === 'ui' }">
                   <div class="vesc-img-wrapper">
-                    <img :src="step.image" :alt="step.imageCaption || step.title" />
+                    <img :src="useOfficialBoard && step.imageOfficial ? step.imageOfficial : step.image" :alt="step.imageCaption || step.title" />
                     <div
-                      v-for="(ann, i) in (step.annotations || [])"
+                      v-for="(ann, i) in (useOfficialBoard && step.annotationsOfficial ? step.annotationsOfficial : step.annotations || [])"
                       :key="i"
                       class="vesc-ann-circle"
                       :class="`vesc-ann-s${step.id}-${i + 1}`"
@@ -155,8 +185,9 @@
 import { reactive, computed, ref } from 'vue'
 
 const STORAGE_KEY = 'vesc-setup-v1'
+const useOfficialBoard = ref(true)
 const BASE = import.meta.env.BASE_URL
-const IMG  = `${BASE}images/vesc/`
+const IMG  = `${BASE}images/vescsetup/`
 
 const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
 const completedSteps = reactive(new Set(saved))
@@ -184,22 +215,30 @@ const sections = [
         title: 'Connect motor phases to VESC',
         desc: 'Wire all three motor phases (U, V, W) to the VESC outputs. Ensure all crimps and terminals are secure before powering on.',
         warning: 'NEVER power on VESC without a motor wired — it will damage the controller.',
-        image: `${IMG}page1_img1.jpeg`,
+        image: `${IMG}vescsetup_1_img1.jpeg`,
         imageCaption: 'Wiring overview — motor phases U, V, W run from the motor (top-left) to the VESC (bottom-left). Power supply connects at the bottom.',
         annotations: [
-          { cx: 13, cy: 20 },  // motor body
-          { cx: 17, cy: 60 },  // VESC motor output terminals
+          { cx: 14, cy: 30, size: 120 },  // motor body
+          { cx: 14, cy: 50, size: 120 },  // VESC motor output terminals
+        ],
+        annotationsOfficial: [
+          { cx: 14, cy: 30, size: 120 },  // motor body
+          { cx: 14, cy: 50, size: 120 },  // VESC motor output terminals
         ],
       },
       {
         id: 2,
         title: 'Connect encoder to VESC',
         desc: 'Wire your encoder (BiSS-C or similar) to the VESC encoder port. Follow your encoder\'s datasheet for pin assignments (CLK, DATA, GND, VCC).',
-        image: `${IMG}page1_img1.jpeg`,
+        image: `${IMG}vescsetup_1_img1.jpeg`,
         imageCaption: 'Encoder signal wires (5V, GND, SLO+, MA+, MA−) run from the VESC encoder port through the CAN transceiver board to the STM32 on the right.',
         annotations: [
-          { cx: 22, cy: 43 },  // VESC encoder port
-          { cx: 88, cy: 62 },  // encoder driver board (far right)
+          { cx: 22, cy: 43, size: 64 },  // VESC encoder port
+          { cx: 88, cy: 62, size: 64 },  // encoder driver board (far right)
+        ],
+        annotationsOfficial: [
+          { cx: 22, cy: 43, size: 64 },  // VESC encoder port
+          { cx: 88, cy: 62, size: 64 },  // encoder driver board (far right)
         ],
       },
       {
@@ -213,11 +252,15 @@ const sections = [
         title: '(Optional) Connect STM32 + TJA1051',
         desc: 'This is the CANBus interface between the OpenFFBoard and VESC. Not required for motor setup — skip until the OpenFFBoard Integration section.',
         tip: 'You can complete the entire VESC setup and test the motor before connecting the OpenFFBoard.',
-        image: `${IMG}page1_img1.jpeg`,
+        image: `${IMG}vescsetup_1_img1.jpeg`,
         imageCaption: 'Full wiring including the TJA1051 CAN transceiver (centre board) and STM32/OpenFFBoard (top-right). CANH and CANL connect VESC to the transceiver.',
         annotations: [
-          { cx: 52, cy: 58 },  // TJA1051 CAN transceiver board
-          { cx: 77, cy: 18 },  // STM32 / OpenFFBoard
+          { cx: 52, cy: 58, size: 64 },  // TJA1051 CAN transceiver board
+          { cx: 77, cy: 18, size: 64 },  // STM32 / OpenFFBoard
+        ],
+        annotationsOfficial: [
+          { cx: 52, cy: 58, size: 64 },  // TJA1051 CAN transceiver board
+          { cx: 77, cy: 18, size: 64 },  // STM32 / OpenFFBoard (official board position)
         ],
       },
     ],
@@ -277,7 +320,7 @@ const sections = [
         id: 11,
         title: 'Configure FOC sensor mode and Alpha',
         desc: 'Motor Settings → FOC → General: set Sensor mode to Encoder. Change the Alpha value to 30 (the default of 2000 ERPM/s is too high for direct-drive).',
-        image: `${IMG}page2_img2.jpeg`,
+        image: `${IMG}vescsetup_2_img2.jpeg`,
         imageSize: 'ui',
         imageCaption: 'Set Alpha to 30 ERPM/s, replacing the default 2000.',
       },
@@ -286,7 +329,7 @@ const sections = [
         title: 'Run RL, then Lambda calibration',
         desc: 'Still in FOC → General: click "Measure R and L (RL)" and wait for it to complete. Then click "Measure Lambda", wait. Finally click Apply.',
         tip: 'Order matters — run RL first, Lambda second.',
-        image: `${IMG}page2_img3.jpeg`,
+        image: `${IMG}vescsetup_2_img3.jpeg`,
         imageSize: 'ui',
         imageCaption: 'Click RL → wait → click λ → wait → click Apply.',
       },
@@ -294,7 +337,7 @@ const sections = [
         id: 13,
         title: 'Detect encoder offset',
         desc: 'Motor Settings → FOC → Encoder tab → click "Detect encoder". The motor will rotate briefly to find the electrical angle offset. Once done, click Apply.',
-        image: `${IMG}page2_img6.jpeg`,
+        image: `${IMG}vescsetup_2_img6.jpeg`,
         imageSize: 'ui',
         imageCaption: 'Click the Encoder button to start offset detection.',
       },
@@ -345,7 +388,7 @@ const sections = [
         title: 'Test motor direction (duty cycle mode)',
         desc: 'At the bottom of VESC Tool, click "D 0.20" then press the Play button. The motor should spin clockwise. Press Stop when done.',
         tip: 'If it spins counter-clockwise: swap any two motor phase wires and redo encoder detection (Step 13).',
-        image: `${IMG}page2_img7.jpeg`,
+        image: `${IMG}vescsetup_2_img7.jpeg`,
         imageSize: 'ui',
         imageCaption: 'D 0.20 duty cycle control — hit the play button to spin the motor.',
       },
@@ -354,7 +397,7 @@ const sections = [
         title: 'Test torque feel',
         desc: 'Switch to current control mode. Set I = 1A and run. Grab the shaft and try to stop it — you should feel consistent resistance throughout the full rotation.',
         warning: 'If force feels stronger on one side than the other, FOC calibration has an issue. Redo Steps 11–14.',
-        image: `${IMG}page2_img9.jpeg`,
+        image: `${IMG}vescsetup_2_img9.jpeg`,
         imageSize: 'ui',
         imageCaption: 'I 1.00 A current mode — feel the torque while holding the shaft.',
       },
@@ -426,6 +469,86 @@ init()
 </script>
 
 <style scoped>
+/* Board selector */
+.board-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.board-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.board-option input[type="radio"] {
+  display: none;
+}
+
+.board-option.active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.board-option-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.board-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.board-option-text strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.board-option-text span {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 600px) {
+  .board-selector { grid-template-columns: 1fr; }
+}
+
+/* Discord banner */
+.discord-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--secondary-subtle);
+  border: 1px solid rgba(var(--secondary-rgb), 0.25);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.discord-banner-icon { font-size: 16px; flex-shrink: 0; }
+
+.discord-banner a {
+  color: var(--secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.discord-banner a:hover { text-decoration: underline; }
+
 /* Progress */
 .vesc-progress-wrap {
   background: var(--surface);

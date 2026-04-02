@@ -84,9 +84,6 @@
 
           <StatusBadge :type="badge.type" :text="badge.text" />
 
-          <!-- Calculation breakdown -->
-          <CalcBreakdown v-if="r.totalCpr > 0" :steps="steps" />
-
           <div class="divider"></div>
 
           <p class="panel-title">Resolution Benchmark</p>
@@ -127,6 +124,12 @@
             <strong>32 000</strong> counts/rev. If your CPR exceeds that, configure the
             encoder divider in the OpenFFBoard web UI to stay within range.
           </div>
+        </div>
+
+        <!-- Calculation breakdown -->
+        <div class="panel breakdown-panel">
+          <CalcBreakdown v-if="r.totalCpr > 0" :steps="steps" />
+          <p v-else style="font-size:13px;color:var(--text-muted);">Enter valid inputs to see the calculation breakdown.</p>
         </div>
 
       </div>
@@ -191,6 +194,14 @@
     </div>
   </main>
 </template>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>
 
 <script setup>
 import { reactive, computed } from 'vue'
