@@ -117,7 +117,12 @@
                   <div class="vesc-img-wrapper">
                     <img :src="useOfficialBoard && step.imageOfficial ? step.imageOfficial : step.image" :alt="step.imageCaption || step.title" />
                     <div
-                      v-for="(ann, i) in (useOfficialBoard && step.annotationsOfficial ? step.annotationsOfficial : step.annotations || [])"
+                      v-if="activeAnnotations(step).length"
+                      class="vesc-blur-overlay"
+                      :style="blurOverlayStyle(step)"
+                    ></div>
+                    <div
+                      v-for="(ann, i) in activeAnnotations(step)"
                       :key="i"
                       class="vesc-ann-circle"
                       :class="`vesc-ann-s${step.id}-${i + 1}`"
@@ -431,6 +436,29 @@ const sections = [
     ],
   },
 ]
+
+// ── Annotation helpers ────────────────────────────────
+function activeAnnotations(step) {
+  return (useOfficialBoard.value && step.annotationsOfficial)
+    ? step.annotationsOfficial
+    : (step.annotations || [])
+}
+
+function blurOverlayStyle(step) {
+  const anns = activeAnnotations(step)
+  if (!anns.length) return {}
+  const gradients = anns.map(ann => {
+    const r = (ann.size || 64) / 2
+    return `radial-gradient(circle ${r}px at ${ann.cx}% ${ann.cy}%, transparent ${r}px, black ${r}px)`
+  }).join(', ')
+  const composite = anns.map(() => 'intersect').join(', ')
+  return {
+    maskImage: gradients,
+    WebkitMaskImage: gradients,
+    maskComposite: composite,
+    WebkitMaskComposite: anns.map(() => 'source-in').join(', '),
+  }
+}
 
 // ── Computed ───────────────────────────────────────────
 const totalSteps     = computed(() => sections.reduce((n, s) => n + s.steps.length, 0))
@@ -806,6 +834,16 @@ init()
   transform: none !important;
 }
 
+/* Blur overlay — darkens + blurs outside the annotation circles */
+.vesc-blur-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  backdrop-filter: blur(3px) brightness(0.55);
+  background: rgba(0, 0, 0, 0.15);
+}
+
 /* Annotation circles — base style shared by all circles.
    Size is set per-circle via inline style (ann.size, default 64px).
    Target individual circles with .vesc-ann-s{stepId}-{n}, e.g.:
@@ -814,6 +852,7 @@ init()
   position: absolute;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+  z-index: 2;
   border: 2.5px solid var(--accent);
   box-shadow:
     0 0 0 1.5px rgba(var(--bg-rgb), 0.6),
