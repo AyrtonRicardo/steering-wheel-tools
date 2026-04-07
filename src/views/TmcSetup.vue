@@ -5,6 +5,10 @@
       <div class="tool-page-header">
         <RouterLink to="/" class="back-link">&#8592; Home</RouterLink>
         <h1 class="tool-page-title">TMC Setup <span class="accent">Wizard</span></h1>
+        <div class="tmc-alert tmc-alert--warn">
+          <span class="tmc-alert-icon">&#9888;</span>
+          Still under construction, do not read just yet. Ignore please!!!!
+        </div>
         <p class="tool-page-desc">
           Step-by-step configuration guide for TMC4671 + TMC6100-based direct-drive force feedback.
           Check off each step as you complete it — progress is saved in your browser.

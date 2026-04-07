@@ -200,14 +200,6 @@
   </main>
 </template>
 
-<style scoped>
-.breakdown-panel :deep(.breakdown) {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-</style>
-
 <script setup>
 import { reactive, computed } from 'vue'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -313,3 +305,11 @@ function cellBtn(rowIdx, colIdx) {
   return (rowIdx - 1) * r.value.cols + colIdx
 }
 </script>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>

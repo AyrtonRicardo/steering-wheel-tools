@@ -94,14 +94,6 @@
   </main>
 </template>
 
-<style scoped>
-.breakdown-panel :deep(.breakdown) {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-</style>
-
 <script setup>
 import { ref, computed } from 'vue'
 import CalcBreakdown from '../components/CalcBreakdown.vue'
@@ -176,3 +168,11 @@ const breakdown = computed(() => [
   },
 ])
 </script>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>

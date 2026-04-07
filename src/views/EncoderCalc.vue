@@ -195,14 +195,6 @@
   </main>
 </template>
 
-<style scoped>
-.breakdown-panel :deep(.breakdown) {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-}
-</style>
-
 <script setup>
 import { reactive, computed } from 'vue'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -273,3 +265,11 @@ const steps = computed(() => {
   ]
 })
 </script>
+
+<style scoped>
+.breakdown-panel :deep(.breakdown) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+</style>
