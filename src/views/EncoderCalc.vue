@@ -4,7 +4,7 @@
 
       <div class="tool-page-header">
         <RouterLink to="/" class="back-link">&#8592; All Tools</RouterLink>
-        <h1 class="tool-page-title">&#128260; Encoder Resolution Calculator</h1>
+        <h1 class="tool-page-title">Encoder Resolution Calculator</h1>
         <p class="tool-page-desc">
           Determine how many encoder counts fall within each degree of rotation — and verify
           your setup meets OpenFFBoard's recommended minimums for smooth force feedback.

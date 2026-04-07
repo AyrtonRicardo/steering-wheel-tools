@@ -7,7 +7,6 @@
 
         <div class="tool-grid">
           <RouterLink to="/encoder-calculator" class="tool-card">
-            <div class="tool-icon">&#128260;</div>
             <h3 class="tool-name">Encoder Resolution Calculator</h3>
             <p class="tool-desc">
               Calculate your steering wheel's angular resolution from encoder PPR and any drive ratio.
@@ -20,7 +19,6 @@
           </RouterLink>
 
           <RouterLink to="/torque-calculator" class="tool-card">
-            <div class="tool-icon">&#9889;</div>
             <h3 class="tool-name">FFB Torque &amp; Force Calculator</h3>
             <p class="tool-desc">
               Convert motor torque (Nm) into grip-force at any wheel diameter.
@@ -33,7 +31,6 @@
           </RouterLink>
 
           <RouterLink to="/button-matrix" class="tool-card">
-            <div class="tool-icon">&#9633;</div>
             <h3 class="tool-name">Button Matrix Calculator</h3>
             <p class="tool-desc">
               Design an optimal row×column matrix for your button box.
@@ -46,7 +43,6 @@
           </RouterLink>
 
           <RouterLink to="/motor-gains" class="tool-card">
-            <div class="tool-icon">&#128200;</div>
             <h3 class="tool-name">Motor Gains Calculator</h3>
             <p class="tool-desc">
               Calculate FOC current controller Kp and Ki for VESC from motor inductance,
@@ -60,7 +56,6 @@
           </RouterLink>
 
           <RouterLink to="/wheelcheck-plotter" class="tool-card">
-            <div class="tool-icon">📈</div>
             <h3 class="tool-name">WheelCheck LUT Plotter</h3>
             <p class="tool-desc">
               Drop one or more WheelCheck log2_*.csv files to plot and compare linearity curves.
@@ -73,8 +68,20 @@
             </div>
           </RouterLink>
 
+          <RouterLink to="/wheel-tester" class="tool-card">
+            <h3 class="tool-name">FFBoard Wheel Tester</h3>
+            <p class="tool-desc">
+              Connect your FFBoard directly via WebHID to inspect telemetry, verify axis behaviour,
+              and test force-feedback effects in real time. No drivers needed.
+            </p>
+            <div>
+              <span class="tool-tag">WebHID</span>
+              <span class="tool-tag">FFBoard</span>
+              <span class="tool-tag">Live</span>
+            </div>
+          </RouterLink>
+
           <RouterLink to="/driver-setup" class="tool-card">
-            <div class="tool-icon">&#128268;</div>
             <h3 class="tool-name">Driver Setup Wizards</h3>
             <p class="tool-desc">
               Step-by-step setup guides for supported motor drivers — VESC and TMC4671+TMC6100.

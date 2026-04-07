@@ -14,46 +14,46 @@
    entire app. All colors derive from these vars.
    ============================================== */
 :root {
-  /* Primary accent (blue) */
-  --accent-rgb:      96, 165, 250;
+  /* Primary accent — cobalt sky (#82C8E5) */
+  --accent-rgb:      130, 200, 229;
   --accent:          rgb(var(--accent-rgb));
-  --accent-dim:      #3b82f6;
+  --accent-dim:      #4a9dbf;
   --accent-glow:     rgba(var(--accent-rgb), 0.18);
   --accent-subtle:   rgba(var(--accent-rgb), 0.07);
 
-  /* Secondary accent (violet) */
-  --secondary-rgb:   167, 139, 250;
+  /* Secondary accent — cobalt blue (#0047AB lightened for visibility) */
+  --secondary-rgb:   64, 130, 224;
   --secondary:       rgb(var(--secondary-rgb));
-  --secondary-dim:   #7c3aed;
-  --secondary-glow:  rgba(var(--secondary-rgb), 0.18);
+  --secondary-dim:   #0047ab;
+  --secondary-glow:  rgba(var(--secondary-rgb), 0.22);
   --secondary-subtle: rgba(var(--secondary-rgb), 0.10);
 
   /* Semantic colors */
-  --success-rgb:     34, 197, 94;
+  --success-rgb:     74, 222, 128;
   --success:         rgb(var(--success-rgb));
   --warning-rgb:     250, 204, 21;
   --warning:         rgb(var(--warning-rgb));
-  --danger-rgb:      239, 68, 68;
+  --danger-rgb:      248, 113, 113;
   --danger:          rgb(var(--danger-rgb));
 
-  /* Backgrounds (blue-tinted darks) */
-  --bg-rgb:          8, 12, 20;
+  /* Backgrounds — navy derived from #000080, clearly blue */
+  --bg-rgb:          12, 18, 40;
   --bg:              rgb(var(--bg-rgb));
-  --bg-alt:          #0c1120;
-  --surface:         #111827;
-  --surface-2:       #1a2235;
-  --border:          #1e2d45;
+  --bg-alt:          #111a3a;
+  --surface:         #162046;
+  --surface-2:       #1d2a5a;
+  --border:          #26376e;
 
-  /* Typography */
-  --text:        #e2e8f0;
-  --text-muted:  #8892a4;
-  --text-dim:    #4a5568;
+  /* Typography — steel blue-gray scale (#6D8196 as anchor) */
+  --text:        #dce8f5;
+  --text-muted:  #8facc8;
+  --text-dim:    #5e7898;
 
   /* Misc */
-  --blue:        var(--secondary);
+  --blue:        var(--accent);
   --radius:      10px;
   --radius-sm:   6px;
-  --shadow:      0 4px 24px rgba(0,0,0,0.4);
+  --shadow:      0 4px 24px rgba(0,0,0,0.5);
 }
 
 html { scroll-behavior: smooth; }

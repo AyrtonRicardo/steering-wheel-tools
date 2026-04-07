@@ -34,6 +34,7 @@
             <div class="nav-dropdown-menu">
               <RouterLink to="/button-matrix" class="nav-dropdown-item" :class="{ active: route.path === '/button-matrix' }">Button Matrix</RouterLink>
               <RouterLink to="/wheelcheck-plotter" class="nav-dropdown-item" :class="{ active: route.path === '/wheelcheck-plotter' }">WheelCheck LUT Plotter</RouterLink>
+              <RouterLink to="/wheel-tester" class="nav-dropdown-item" :class="{ active: route.path === '/wheel-tester' }">FFBoard Wheel Tester</RouterLink>
             </div>
           </div>
         </nav>
@@ -50,7 +51,7 @@ const isCalcsActive = computed(() =>
   ['/encoder-calculator', '/torque-calculator', '/motor-gains'].includes(route.path)
 )
 const isExtrasActive = computed(() =>
-  ['/button-matrix', '/wheelcheck-plotter'].includes(route.path)
+  ['/button-matrix', '/wheelcheck-plotter', '/wheel-tester'].includes(route.path)
 )
 const isDriverSetupActive = computed(() =>
   route.path === '/vesc-setup' || route.path === '/tmc-setup'

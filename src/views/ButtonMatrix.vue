@@ -4,7 +4,7 @@
 
       <div class="tool-page-header">
         <RouterLink to="/" class="back-link">&#8592; All Tools</RouterLink>
-        <h1 class="tool-page-title">&#9633; Button Matrix Calculator</h1>
+        <h1 class="tool-page-title">Button Matrix Calculator</h1>
         <p class="tool-page-desc">
           Design a row × column button matrix for your wheel or button box.
           Find the optimal matrix dimensions, pin requirements, and diode count

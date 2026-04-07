@@ -4,7 +4,7 @@
 
       <div class="tool-page-header">
         <RouterLink to="/" class="back-link">&#8592; All Tools</RouterLink>
-        <h1 class="tool-page-title">&#9889; FFB Torque &amp; Force Calculator</h1>
+        <h1 class="tool-page-title">FFB Torque &amp; Force Calculator</h1>
         <p class="tool-page-desc">
           Convert motor peak torque into the force you'll feel at the wheel rim, estimate
           peak power draw, and calculate minimum power supply requirements for your OpenFFBoard build.

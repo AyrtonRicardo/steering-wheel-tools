@@ -1,5 +1,5 @@
 <template>
-  <div class="wcp-root">
+  <div class="wcp-root" :class="{ 'is-app': files.length > 0 }">
 
     <!-- DROP SCREEN -->
     <div
@@ -22,6 +22,61 @@
         <input ref="fileInputRef" type="file" accept=".csv" multiple style="display:none" @change="onFileInputChange" />
       </div>
       <div class="wcp-drop-hint">DRAG &amp; DROP MULTIPLE FILES AT ONCE · OR BROWSE</div>
+
+      <div class="wcp-howto">
+        <div class="wcp-howto-header">
+          <span class="wcp-howto-badge">GUIDE</span>
+          <span class="wcp-howto-heading">How to generate the CSV</span>
+        </div>
+
+        <div class="wcp-howto-prereq">
+          <span class="wcp-prereq-label">PREREQUISITE</span>
+          This tool uses the CSV file produced by <strong>WheelCheck</strong> — Step Log 2 (linear force test). Make sure your wheel is connected and FFB is active in your sim before running.
+        </div>
+
+        <div class="wcp-steps">
+          <div class="wcp-step">
+            <div class="wcp-step-num">1</div>
+            <div class="wcp-step-body">
+              <div class="wcp-step-title">Open WheelCheck</div>
+              <div class="wcp-step-desc">Set <strong>Max Count</strong> to at least <strong>50</strong> in the input box. Higher values like <strong>100</strong> give smoother, more accurate curves.</div>
+            </div>
+          </div>
+          <div class="wcp-step">
+            <div class="wcp-step-num">2</div>
+            <div class="wcp-step-body">
+              <div class="wcp-step-title">Run the linearity test</div>
+              <div class="wcp-step-desc">Select <strong>Step Log 2 (linear force test)</strong> and wait until the sweep completes automatically.</div>
+              <div class="wcp-step-tag">generates <code>log2_*.csv</code> next to the executable</div>
+            </div>
+          </div>
+          <div class="wcp-step">
+            <div class="wcp-step-num">3</div>
+            <div class="wcp-step-body">
+              <div class="wcp-step-title">Drop the file here</div>
+              <div class="wcp-step-desc">Drag the <code>log2_*.csv</code> onto this page to plot the linearity curve and export a LUT. Run multiple sweeps with different FFB settings and drop them all at once to compare.</div>
+            </div>
+          </div>
+          <div class="wcp-step">
+            <div class="wcp-step-num">4</div>
+            <div class="wcp-step-body">
+              <div class="wcp-step-title">Install the LUT in Assetto Corsa</div>
+              <div class="wcp-step-desc">Save the exported LUT to <code>My Documents\Assetto Corsa\cfg\</code> (e.g. <code>myLUT.lut</code>), then open <code>ff_post_process.ini</code> in the same folder and set:</div>
+              <div class="wcp-ini-block">
+                <div><span class="wcp-ini-key">TYPE</span><span class="wcp-ini-eq">=</span><span class="wcp-ini-val">LUT</span></div>
+                <div><span class="wcp-ini-key">ENABLED</span><span class="wcp-ini-eq">=</span><span class="wcp-ini-val">1</span></div>
+                <div><span class="wcp-ini-key">CURVE</span><span class="wcp-ini-eq">=</span><span class="wcp-ini-val">myLUT.lut</span></div>
+              </div>
+              <div class="wcp-step-desc" style="margin-top:8px">Set <strong>Min Force to 0</strong> in Assetto Corsa's FFB settings.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wcp-howto-warn">
+          Do not alter FFB Strength in your wheel's profiler after generating the LUT. If you change the FFB Gain, rerun WheelCheck + export a new LUT.
+        </div>
+        <div class="wcp-howto-note">Results are for guidance only — verify against your specific hardware and driver settings.</div>
+      </div>
       <div v-if="error" class="wcp-error-bar">⚠ {{ error }}</div>
     </div>
 
@@ -255,7 +310,7 @@ function rebuildChart() {
     datasets.push({
       label: '__id',
       data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
-      borderColor: 'rgba(74,85,112,0.4)', borderWidth: 1,
+      borderColor: 'rgba(107,117,133,0.3)', borderWidth: 1,
       borderDash: [5, 5], pointRadius: 0, fill: false, tension: 0, order: 999,
     })
   }
@@ -299,24 +354,24 @@ function rebuildChart() {
       scales: {
         x: {
           type: 'linear', min: 0, max: 1,
-          title: { display: true, text: 'Force Input (normalized)', color: '#4a5570', font: { family: 'monospace', size: 10 } },
-          grid: { color: '#1f2433' },
-          ticks: { color: '#4a5570', font: { family: 'monospace', size: 9 }, maxTicksLimit: 6 },
+          title: { display: true, text: 'Force Input (normalized)', color: '#6b7585', font: { family: 'monospace', size: 10 } },
+          grid: { color: '#162046' },
+          ticks: { color: '#5e7898', font: { family: 'monospace', size: 9 }, maxTicksLimit: 6 },
         },
         y: {
           type: 'linear',
           min: isDiff ? undefined : 0,
           max: isDiff ? undefined : 1,
-          title: { display: true, text: isDiff ? 'Δ (Response − Force)' : 'Wheel Response (normalized)', color: '#4a5570', font: { family: 'monospace', size: 10 } },
-          grid: { color: '#1f2433' },
-          ticks: { color: '#4a5570', font: { family: 'monospace', size: 9 }, maxTicksLimit: 6 },
+          title: { display: true, text: isDiff ? 'Δ (Response − Force)' : 'Wheel Response (normalized)', color: '#5e7898', font: { family: 'monospace', size: 10 } },
+          grid: { color: '#162046' },
+          ticks: { color: '#5e7898', font: { family: 'monospace', size: 9 }, maxTicksLimit: 6 },
         },
       },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#13161e', borderColor: '#2a3048', borderWidth: 1,
-          titleColor: '#4a5570', titleFont: { family: 'monospace', size: 9 },
+          backgroundColor: '#111a3a', borderColor: '#26376e', borderWidth: 1,
+          titleColor: '#5e7898', titleFont: { family: 'monospace', size: 9 },
           bodyFont: { family: 'monospace', size: 10 },
           callbacks: {
             title: items => 'FORCE  ' + items[0].parsed.x.toFixed(4),
@@ -393,67 +448,224 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
 </script>
 
 <style scoped>
-/* Root takes remaining viewport height after app header/footer */
+/* Root — drop mode scrolls naturally; app mode locks to viewport */
 .wcp-root {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - var(--header-height, 56px) - var(--footer-height, 48px));
-  background: #0d0f14;
-  color: #b8c4d8;
+  min-height: calc(100vh - var(--header-height, 56px) - var(--footer-height, 48px));
+  background: var(--bg);
+  color: var(--text-muted);
   font-family: var(--font-sans, sans-serif);
+}
+.wcp-root.is-app {
+  height: calc(100vh - var(--header-height, 56px) - var(--footer-height, 48px));
   overflow: hidden;
 }
 
 /* ── Drop screen ───────────────────────────────────────────────── */
 .wcp-drop-screen {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  padding: 40px 0 60px;
   gap: 20px;
   transition: background 0.2s;
 }
-.wcp-drop-screen.drag-over { background: rgba(0,212,255,0.03); }
+.wcp-drop-screen.drag-over { background: rgba(var(--accent-rgb), 0.04); }
 
 .wcp-drop-box {
   width: 460px;
   padding: 48px 40px;
-  border: 1px solid #2a3048;
+  border: 1px solid var(--border);
   border-radius: 4px;
   text-align: center;
-  background: linear-gradient(135deg, rgba(0,212,255,0.03) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.04) 0%, transparent 60%);
   transition: border-color 0.2s;
 }
-.wcp-drop-screen.drag-over .wcp-drop-box { border-color: #00d4ff; }
+.wcp-drop-screen.drag-over .wcp-drop-box { border-color: var(--accent); }
 
-.wcp-drop-icon  { font-size: 44px; margin-bottom: 14px; opacity: 0.5; }
-.wcp-drop-title { font-weight: 800; font-size: 20px; color: #fff; margin-bottom: 8px; }
-.wcp-drop-sub   { font-size: 12px; color: #4a5570; line-height: 1.7; }
-.wcp-drop-sub strong { color: #00d4ff; }
+.wcp-drop-icon  { font-size: 44px; margin-bottom: 14px; opacity: 0.4; }
+.wcp-drop-title { font-weight: 800; font-size: 20px; color: var(--text); margin-bottom: 8px; }
+.wcp-drop-sub   { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+.wcp-drop-sub strong { color: var(--accent); }
 
 .wcp-browse-btn {
   margin-top: 22px;
   padding: 10px 28px;
   background: transparent;
-  border: 1px solid #2a3048;
-  color: #b8c4d8;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   font-family: monospace;
   font-size: 11px;
   cursor: pointer;
   border-radius: 2px;
   transition: all 0.15s;
 }
-.wcp-browse-btn:hover { border-color: #00d4ff; color: #00d4ff; }
+.wcp-browse-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-.wcp-drop-hint { font-size: 10px; color: #4a5570; font-family: monospace; letter-spacing: 1px; }
+.wcp-drop-hint { font-size: 10px; color: var(--text-dim); font-family: monospace; letter-spacing: 1px; }
+
+/* ── How-to panel ───────────────────────────────────────────────── */
+.wcp-howto {
+  width: 460px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.wcp-howto-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--surface);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+.wcp-howto-badge {
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+.wcp-howto-heading {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+}
+
+.wcp-howto-prereq {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--surface);
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.wcp-prereq-label {
+  flex-shrink: 0;
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--secondary);
+  background: rgba(var(--secondary-rgb), 0.09);
+  border: 1px solid rgba(var(--secondary-rgb), 0.25);
+  border-radius: 2px;
+  padding: 2px 6px;
+  margin-top: 1px;
+}
+.wcp-howto-prereq strong { color: var(--text-muted); }
+
+.wcp-steps {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.wcp-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.wcp-step-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.3);
+  color: var(--accent);
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.wcp-step-body { flex: 1; }
+.wcp-step-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.wcp-step-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+.wcp-step-desc strong { color: var(--text-muted); }
+.wcp-step-desc code,
+.wcp-step-tag code {
+  font-family: monospace;
+  font-size: 10px;
+  background: rgba(var(--accent-rgb), 0.07);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  border-radius: 2px;
+  padding: 1px 5px;
+  color: var(--accent);
+}
+.wcp-step-tag {
+  margin-top: 6px;
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--text-dim);
+  letter-spacing: 0.3px;
+}
+
+.wcp-ini-block {
+  margin-top: 8px;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--surface);
+  border-left: 2px solid rgba(var(--secondary-rgb), 0.5);
+  border-radius: 2px;
+  padding: 8px 14px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.9;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.wcp-ini-key  { color: var(--secondary); }
+.wcp-ini-eq   { color: var(--text-dim); padding: 0 3px; }
+.wcp-ini-val  { color: var(--accent); }
+
+.wcp-howto-warn {
+  margin: 0 20px 12px;
+  padding: 10px 14px;
+  background: rgba(var(--warning-rgb), 0.04);
+  border: 1px solid rgba(var(--warning-rgb), 0.18);
+  border-left: 2px solid rgba(var(--warning-rgb), 0.5);
+  border-radius: 2px;
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.wcp-howto-note {
+  padding: 10px 20px;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-style: italic;
+  border-top: 1px solid var(--surface);
+  line-height: 1.5;
+}
+
 .wcp-error-bar {
-  background: rgba(255,77,109,0.1);
-  border: 1px solid rgba(255,77,109,0.3);
+  background: rgba(var(--danger-rgb), 0.08);
+  border: 1px solid rgba(var(--danger-rgb), 0.25);
   border-radius: 2px;
   padding: 10px 16px;
   font-size: 11px;
-  color: #ff4d6d;
+  color: var(--danger);
   font-family: monospace;
   max-width: 460px;
   text-align: center;
@@ -465,16 +677,16 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
 .wcp-topbar {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid #1f2433;
+  border-bottom: 1px solid var(--surface);
   flex-shrink: 0;
   height: 44px;
 }
 .wcp-topbar-brand {
   padding: 0 20px;
-  border-right: 1px solid #1f2433;
+  border-right: 1px solid var(--surface);
   font-weight: 800;
   font-size: 13px;
-  color: #00d4ff;
+  color: var(--accent);
   letter-spacing: 1px;
   text-transform: uppercase;
   white-space: nowrap;
@@ -486,31 +698,31 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
   padding: 0 16px;
   font-family: monospace;
   font-size: 10px;
-  color: #4a5570;
+  color: var(--text-dim);
   flex: 1;
-  border-right: 1px solid #1f2433;
+  border-right: 1px solid var(--surface);
   height: 100%;
   display: flex;
   align-items: center;
   gap: 20px;
 }
-.wcp-topbar-info b { color: #b8c4d8; font-weight: 400; }
+.wcp-topbar-info b { color: var(--text-muted); font-weight: 400; }
 .wcp-topbar-actions { display: flex; height: 100%; }
 .wcp-tbar-btn {
   padding: 0 16px;
   background: none;
   border: none;
-  border-left: 1px solid #1f2433;
-  color: #4a5570;
+  border-left: 1px solid var(--surface);
+  color: var(--text-dim);
   font-family: monospace;
   font-size: 10px;
   cursor: pointer;
   transition: color 0.15s;
   white-space: nowrap;
 }
-.wcp-tbar-btn:hover { color: #00d4ff; }
-.wcp-tbar-btn.add   { color: rgba(57,255,143,0.7); }
-.wcp-tbar-btn.add:hover { color: #39ff8f; }
+.wcp-tbar-btn:hover { color: var(--accent); }
+.wcp-tbar-btn.add   { color: rgba(var(--success-rgb), 0.7); }
+.wcp-tbar-btn.add:hover { color: var(--success); }
 
 /* ── Body ────────────────────────────────────────────────────── */
 .wcp-body {
@@ -531,7 +743,7 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
 .wcp-chart-tabs {
   display: flex;
   gap: 1px;
-  background: #1f2433;
+  background: var(--surface);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -539,15 +751,15 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
   padding: 6px 14px;
   font-family: monospace;
   font-size: 10px;
-  background: #13161e;
-  color: #4a5570;
+  background: var(--bg-alt);
+  color: var(--text-dim);
   border: none;
   cursor: pointer;
   transition: all 0.15s;
   letter-spacing: 0.5px;
 }
-.wcp-tab.active { background: #2a3048; color: #00d4ff; }
-.wcp-tab:hover:not(.active) { color: #b8c4d8; }
+.wcp-tab.active { background: var(--border); color: var(--accent); }
+.wcp-tab:hover:not(.active) { color: var(--text-muted); }
 
 .wcp-spacer { flex: 1; }
 .wcp-smooth-inline {
@@ -556,13 +768,13 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
   gap: 8px;
   font-family: monospace;
   font-size: 10px;
-  color: #4a5570;
+  color: var(--text-dim);
 }
 .wcp-smooth-inline input[type=range] {
   width: 80px;
   height: 2px;
   -webkit-appearance: none;
-  background: #2a3048;
+  background: var(--border);
   outline: none;
 }
 .wcp-smooth-inline input[type=range]::-webkit-slider-thumb {
@@ -570,15 +782,15 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #00d4ff;
+  background: var(--accent);
   cursor: pointer;
 }
-.wcp-smooth-inline span { color: #00d4ff; min-width: 18px; }
+.wcp-smooth-inline span { color: var(--accent); min-width: 18px; }
 
 .wcp-chart-wrap {
   flex: 1;
-  background: #13161e;
-  border: 1px solid #1f2433;
+  background: var(--bg-alt);
+  border: 1px solid var(--surface);
   border-radius: 2px;
   padding: 16px;
   position: relative;
@@ -587,19 +799,19 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
 
 /* ── Sidebar ──────────────────────────────────────────────────── */
 .wcp-sidebar {
-  border-left: 1px solid #1f2433;
+  border-left: 1px solid var(--surface);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #1f2433 transparent;
+  scrollbar-color: var(--border) transparent;
 }
-.wcp-sb-section { padding: 14px 16px; border-bottom: 1px solid #1f2433; }
+.wcp-sb-section { padding: 14px 16px; border-bottom: 1px solid var(--surface); }
 .wcp-sb-label {
   font-size: 9px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: #4a5570;
+  color: var(--text-dim);
   margin-bottom: 10px;
 }
 
@@ -610,62 +822,62 @@ onUnmounted(() => { if (chart) { chart.destroy(); chart = null } })
   padding: 7px 9px;
   border-radius: 2px;
   margin-bottom: 6px;
-  background: #0d0f14;
-  border: 1px solid #1f2433;
+  background: var(--bg);
+  border: 1px solid var(--surface);
   transition: border-color 0.15s;
 }
 .wcp-file-item.muted { opacity: 0.35; }
 .wcp-file-swatch { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.wcp-file-name  { font-family: monospace; font-size: 9px; color: #b8c4d8; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wcp-file-pts   { font-family: monospace; font-size: 9px; color: #4a5570; flex-shrink: 0; }
+.wcp-file-name  { font-family: monospace; font-size: 9px; color: var(--text-muted); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wcp-file-pts   { font-family: monospace; font-size: 9px; color: var(--text-dim); flex-shrink: 0; }
 .wcp-file-vis-btn {
   background: none; border: none; cursor: pointer;
-  padding: 1px 3px; font-size: 10px; color: #4a5570;
+  padding: 1px 3px; font-size: 10px; color: var(--text-dim);
   flex-shrink: 0; transition: color 0.15s;
 }
-.wcp-file-vis-btn:hover { color: #b8c4d8; }
+.wcp-file-vis-btn:hover { color: var(--text-muted); }
 .wcp-file-remove {
   background: none; border: none; cursor: pointer;
-  padding: 1px 3px; font-size: 13px; color: #4a5570;
+  padding: 1px 3px; font-size: 13px; color: var(--text-dim);
   flex-shrink: 0; transition: color 0.15s; line-height: 1;
 }
-.wcp-file-remove:hover { color: #ff4d6d; }
+.wcp-file-remove:hover { color: var(--danger); }
 
 .wcp-compare-table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 9px; }
 .wcp-compare-table th {
-  text-align: left; color: #4a5570; padding: 3px 5px;
-  font-weight: 400; border-bottom: 1px solid #1f2433; letter-spacing: 0.5px;
+  text-align: left; color: var(--text-dim); padding: 3px 5px;
+  font-weight: 400; border-bottom: 1px solid var(--surface); letter-spacing: 0.5px;
 }
-.wcp-compare-table td { padding: 5px 5px; border-bottom: 1px solid rgba(31,36,51,0.5); }
+.wcp-compare-table td { padding: 5px 5px; border-bottom: 1px solid rgba(28,28,35,0.8); }
 .wcp-compare-table tr:hover td { background: rgba(255,255,255,0.02); }
 .wcp-td-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70px; }
 .wcp-td-dot  { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
 .wcp-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 8px; font-size: 10px; color: #4a5570;
+  margin-bottom: 8px; font-size: 10px; color: var(--text-dim);
 }
 .wcp-toggle {
-  width: 28px; height: 14px; background: #2a3048; border-radius: 7px;
+  width: 28px; height: 14px; background: var(--border); border-radius: 7px;
   position: relative; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0;
 }
 .wcp-toggle::after {
   content: ''; position: absolute; width: 10px; height: 10px;
-  border-radius: 50%; background: #4a5570; top: 2px; left: 2px; transition: all 0.2s;
+  border-radius: 50%; background: var(--text-dim); top: 2px; left: 2px; transition: all 0.2s;
 }
-.wcp-toggle.on { background: rgba(0,212,255,0.25); }
-.wcp-toggle.on::after { background: #00d4ff; transform: translateX(14px); }
+.wcp-toggle.on { background: rgba(var(--accent-rgb), 0.28); }
+.wcp-toggle.on::after { background: var(--accent); transform: translateX(14px); }
 
 .wcp-export-btn {
   width: 100%; padding: 9px;
-  background: rgba(57,255,143,0.07);
-  border: 1px solid rgba(57,255,143,0.25);
-  color: #39ff8f;
+  background: rgba(var(--success-rgb), 0.07);
+  border: 1px solid rgba(var(--success-rgb), 0.25);
+  color: var(--success);
   font-family: monospace; font-size: 10px;
   cursor: pointer; border-radius: 2px;
   letter-spacing: 1px; text-transform: uppercase;
   transition: all 0.15s; margin-bottom: 7px;
 }
-.wcp-export-btn:hover { background: rgba(57,255,143,0.14); }
+.wcp-export-btn:hover { background: rgba(var(--success-rgb), 0.14); }
 .wcp-export-btn:last-child { margin-bottom: 0; }
 </style>

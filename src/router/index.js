@@ -9,6 +9,7 @@ import VescSetup from '../views/VescSetup.vue'
 import TmcSetup from '../views/TmcSetup.vue'
 import MotorGains from '../views/MotorGains.vue'
 import WheelCheckPlotter from '../views/WheelCheckPlotter.vue'
+import WheelTester from '../views/WheelTester.vue'
 
 const routes = [
   { path: '/', component: HomeView },
@@ -21,6 +22,7 @@ const routes = [
   { path: '/tmc-setup', component: TmcSetup },
   { path: '/motor-gains', component: MotorGains },
   { path: '/wheelcheck-plotter', component: WheelCheckPlotter },
+  { path: '/wheel-tester', component: WheelTester },
 ]
 
 export const router = createRouter({
